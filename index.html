@@ -666,14 +666,57 @@ function updateHeader() {
   `;
 }
 
-function renderAll() {
+function renderAll(skipInputCards=false) {
   avCache = simAv(debts);
   noCache = simNo(debts);
-  renderInput();
+  if (!skipInputCards) renderInput();
+  else renderInputSummaryOnly();
   renderAv();
   renderCompare();
   renderMonthly();
   updateHeader();
+}
+
+function renderInputSummaryOnly() {
+  // カードは再生成せず、サマリーと各カードの結果部分だけ更新
+  const totalBal = debts.reduce((s,d)=>s+(d.balance||0),0);
+  const totalPay = debts.reduce((s,d)=>s+(d.monthly||0),0);
+  document.getElementById('input-summary').innerHTML = `
+    <div class="sum-card peach">
+      <div class="sum-label">💳 総残高</div>
+      <div class="sum-val pink">${yen(totalBal)}</div>
+      <div class="sum-sub">${debts.filter(d=>d.balance>0).length}件の借入</div>
+    </div>
+    <div class="sum-card sky">
+      <div class="sum-label">💰 月返済合計</div>
+      <div class="sum-val blue">${yen(totalPay)}</div>
+      <div class="sum-sub">固定で毎月返済中</div>
+    </div>
+  `;
+  // 各カードの結果ボックスだけ更新
+  debts.forEach(d => {
+    const box = document.querySelector(`#card-${d.id} .debt-result-box`);
+    if (!box) return;
+    let months = null;
+    if (d.balance > 0 && d.monthly > 0) {
+      let bal = d.balance, m = 0;
+      while (bal > 0 && m < 360) {
+        m++; const i = calcInterest(d, bal); bal = bal + i - d.monthly;
+        if (bal < 0.5) { bal = 0; break; }
+      }
+      months = bal <= 0 ? m : null;
+    }
+    box.innerHTML = `
+      <div>
+        <div class="dr-label">単独完済まで</div>
+        <div class="dr-val ${d.monthly>0&&months?'good':'bad'}">
+          ${!d.monthly?'返済額を入力してね': months?monthStr(months):'完済不可（返済額不足）'}
+        </div>
+        ${months?`<div class="dr-sub">${endDate(months)} 完済予定</div>`:''}
+      </div>
+      <button class="del-btn" onclick="removeDebt(${d.id})">✕</button>
+    `;
+  });
 }
 
 // ── 入力 ──
@@ -730,13 +773,13 @@ function renderInput() {
           <div class="field"><label>借入先の名前</label>
             <input type="text" value="${d.name}" placeholder="例：UFJ" oninput="upd(${d.id},'name',this.value)"></div>
           <div class="field"><label>残高（円）</label>
-            <input type="number" inputmode="numeric" value="${d.balance||''}" placeholder="0" oninput="upd(${d.id},'balance',+this.value||0)"></div>
+            <input type="number" inputmode="numeric" value="${d.balance||''}" placeholder="0" oninput="upd(${d.id},'balance',this.value)"></div>
           <div class="field"><label>年利（%）※手数料型は0</label>
-            <input type="number" inputmode="decimal" value="${d.rate||''}" placeholder="0" step="0.1" oninput="upd(${d.id},'rate',+this.value||0)"></div>
+            <input type="number" inputmode="decimal" value="${d.rate||''}" placeholder="0" step="0.1" oninput="upd(${d.id},'rate',this.value)"></div>
           <div class="field"><label>月返済額（円）</label>
-            <input type="number" inputmode="numeric" value="${d.monthly||''}" placeholder="0" oninput="upd(${d.id},'monthly',+this.value||0)"></div>
+            <input type="number" inputmode="numeric" value="${d.monthly||''}" placeholder="0" oninput="upd(${d.id},'monthly',this.value)"></div>
           <div class="field"><label>手数料合計（円）</label>
-            <input type="number" inputmode="numeric" value="${d.fee||''}" placeholder="0" oninput="upd(${d.id},'fee',+this.value||0)"></div>
+            <input type="number" inputmode="numeric" value="${d.fee||''}" placeholder="0" oninput="upd(${d.id},'fee',this.value)"></div>
         </div>
         <div class="debt-result-box">
           <div>
@@ -755,7 +798,16 @@ function renderInput() {
 }
 
 function toggleCard(id) { document.getElementById('card-'+id).classList.toggle('open'); }
-function upd(id, key, val) { const d=debts.find(d=>d.id===id); if(d){d[key]=val;saveDebts();renderAll();showSavedToast();} }
+function upd(id, key, rawVal) {
+  const d = debts.find(d=>d.id===id);
+  if (!d) return;
+  // 空・マイナスだけ・小数点だけの入力中は無視（入力途中）
+  if (rawVal === '' || rawVal === '-' || rawVal === '.') return;
+  const val = parseFloat(rawVal);
+  if (isNaN(val)) return;
+  d[key] = val;
+  saveDebts(); renderAll(true); showSavedToast();
+}
 function removeDebt(id) { debts=debts.filter(d=>d.id!==id); saveDebts();renderAll(); showSavedToast(); }
 function addDebt() {
   debts.push({id:nextId++,name:'',balance:0,rate:0,monthly:0,fee:0});
