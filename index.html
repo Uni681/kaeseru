@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>かえせる！返済シミュ</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --peach:    #ff8fab;
+  --peach2:   #ffb3c6;
+  --peach-bg: #fff0f3;
+  --mint:     #52b788;
+  --mint2:    #95d5b2;
+  --mint-bg:  #f0faf5;
+  --lavender: #c77dff;
+  --lav-bg:   #f8f0ff;
+  --sky:      #4ea8de;
+  --sky-bg:   #edf6ff;
+  --yellow:   #ffbe0b;
+  --yel-bg:   #fffbea;
+  --bg:       #fff8f9;
+  --bg2:      #ffffff;
+  --card:     #ffffff;
+  --text:     #3d2c35;
+  --text2:    #9e8a93;
+  --text3:    #c9b8bf;
+  --border:   #f5e6ea;
+  --shadow:   0 4px 20px rgba(255,143,171,0.13);
+  --shadow-lg:0 8px 32px rgba(255,143,171,0.18);
+  --r:        20px;
+  --r-sm:     12px;
+  --r-xs:     8px;
+  --sans:     'Nunito','Noto Sans JP',sans-serif;
+  --footer-h: 72px;
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; }
+body {
+  background: var(--bg);
+  font-family: var(--sans);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+  overscroll-behavior: none;
+}
+
+/* ── SCROLL AREA ── */
+.scroll-area {
+  height: calc(100dvh - var(--footer-h));
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── HEADER ── */
+.app-header {
+  background: linear-gradient(135deg, #ff8fab 0%, #ffb3c6 50%, #ffd6e0 100%);
+  padding: 20px 20px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.app-header::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: rgba(255,255,255,.15);
+  border-radius: 50%;
+}
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: 30px;
+  width: 80px; height: 80px;
+  background: rgba(255,255,255,.1);
+  border-radius: 50%;
+}
+.header-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  color: rgba(255,255,255,.8);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.header-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+  position: relative;
+  z-index: 1;
+}
+.header-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,.85);
+  margin-top: 4px;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+.header-chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+.chip {
+  background: rgba(255,255,255,.25);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+.chip span { font-size: 11px; opacity: .85; }
+
+/* ── PAGE CONTENT ── */
+.page { display: none; padding: 20px 16px; animation: pageIn .25s ease; }
+.page.active { display: block; }
+@keyframes pageIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+/* ── SECTION ── */
+.section { margin-bottom: 20px; }
+.section-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── SUMMARY CARDS ── */
+.sum-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.sum-card {
+  background: var(--card);
+  border-radius: var(--r);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  border: 1.5px solid transparent;
+  transition: transform .15s;
+}
+.sum-card:active { transform: scale(.97); }
+.sum-card.peach { border-color: #ffd6e0; background: linear-gradient(135deg,#fff,#fff8f9); }
+.sum-card.mint  { border-color: #b7e4c7; background: linear-gradient(135deg,#fff,var(--mint-bg)); }
+.sum-card.lav   { border-color: #e2b4ff; background: linear-gradient(135deg,#fff,var(--lav-bg)); }
+.sum-card.sky   { border-color: #b8d9f5; background: linear-gradient(135deg,#fff,var(--sky-bg)); }
+.sum-label { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 3px; }
+.sum-val {
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+.sum-val.pink { color: var(--peach); }
+.sum-val.green { color: var(--mint); }
+.sum-val.orange { color: #ff9f1c; }
+.sum-val.blue { color: var(--sky); }
+.sum-val.purple { color: var(--lavender); }
+.sum-sub { font-size: 10px; color: var(--text3); margin-top: 3px; font-weight: 600; }
+
+/* ── DEBT CARD ── */
+.debt-card {
+  background: var(--card);
+  border-radius: var(--r);
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  transition: box-shadow .2s, border-color .2s;
+}
+.debt-card.open { box-shadow: var(--shadow-lg); border-color: var(--peach2); }
+.dch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.debt-icon {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.debt-info { flex: 1; min-width: 0; }
+.debt-name-text { font-size: 14px; font-weight: 800; }
+.debt-balance-text { font-size: 12px; color: var(--text2); font-weight: 600; margin-top: 1px; }
+.rate-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.rp-hot  { background: #ffebef; color: var(--peach); }
+.rp-warm { background: #fff3dc; color: #ff9f1c; }
+.rp-cool { background: var(--lav-bg); color: var(--lavender); }
+.rp-fee  { background: var(--sky-bg); color: var(--sky); }
+.chevron-icon {
+  font-size: 12px; color: var(--text3);
+  transition: transform .25s;
+  flex-shrink: 0;
+}
+.debt-card.open .chevron-icon { transform: rotate(180deg); }
+.dcb {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: 1.5px solid var(--border);
+}
+.debt-card.open .dcb { display: block; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 11px; font-weight: 700; color: var(--text2); }
+.field input {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--sans);
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--peach);
+  box-shadow: 0 0 0 3px rgba(255,143,171,.15);
+}
+.debt-result-box {
+  margin-top: 12px;
+  background: var(--bg);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dr-label { font-size: 11px; color: var(--text2); font-weight: 700; }
+.dr-val { font-size: 15px; font-weight: 900; margin-top: 2px; }
+.dr-val.good { color: var(--mint); }
+.dr-val.bad  { color: var(--peach); }
+.dr-sub { font-size: 10px; color: var(--text3); margin-top: 1px; font-weight: 600; }
+.del-btn {
+  background: #fff0f3;
+  border: none;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--peach);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+  flex-shrink: 0;
+}
+.del-btn:hover { background: #ffd6e0; }
+.add-btn {
+  width: 100%;
+  padding: 14px;
+  border: 2px dashed var(--peach2);
+  background: var(--peach-bg);
+  color: var(--peach);
+  font-size: 14px;
+  font-weight: 800;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all .2s;
+  font-family: var(--sans);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.add-btn:hover { background: #ffd6e0; border-color: var(--peach); }
+
+/* ── TIMELINE ── */
+.timeline { padding-left: 28px; position: relative; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 9px; top: 12px; bottom: 12px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--peach2), var(--mint2));
+  border-radius: 1px;
+}
+.tl-item { position: relative; margin-bottom: 14px; }
+.tl-dot {
+  position: absolute;
+  left: -24px; top: 10px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 3px solid var(--bg2);
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.tl-card {
+  background: var(--card);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  border: 1.5px solid var(--border);
+}
+.tl-step { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 3px; }
+.tl-name { font-size: 15px; font-weight: 900; margin-bottom: 3px; }
+.tl-date { font-size: 12px; color: var(--text2); font-weight: 700; }
+.tl-note { font-size: 11px; color: var(--text3); margin-top: 4px; font-weight: 600; }
+.boost-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  background: #fff3dc;
+  color: #ff9f1c;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.finish-card {
+  background: linear-gradient(135deg, var(--mint-bg), #fff);
+  border: 2px solid var(--mint2);
+  border-radius: var(--r);
+  padding: 18px;
+  text-align: center;
+  margin-top: 4px;
+}
+.finish-emoji { font-size: 32px; margin-bottom: 6px; }
+.finish-title { font-size: 18px; font-weight: 900; color: var(--mint); }
+.finish-date { font-size: 13px; color: var(--text2); font-weight: 700; margin-top: 4px; }
+
+/* ── COMPARE ── */
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.compare-card {
+  background: var(--card);
+  border-radius: var(--r);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  border: 1.5px solid var(--border);
+}
+.compare-card.best {
+  border-color: var(--mint2);
+  background: linear-gradient(135deg, #fff, var(--mint-bg));
+}
+.cc-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 10px; }
+.compare-card.best .cc-label { color: var(--mint); }
+.cc-item { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.cc-item:last-child { border: none; }
+.cc-k { color: var(--text2); font-weight: 600; }
+.cc-v { font-weight: 800; }
+.cc-v.green { color: var(--mint); }
+.saving-hero {
+  background: linear-gradient(135deg, #fff0f3, #fff8f9);
+  border: 2px solid var(--peach2);
+  border-radius: var(--r);
+  padding: 20px;
+  text-align: center;
+}
+.sh-label { font-size: 12px; color: var(--text2); font-weight: 700; margin-bottom: 8px; }
+.sh-amount { font-size: 32px; font-weight: 900; color: var(--peach); letter-spacing: -.03em; }
+.sh-sub { font-size: 12px; color: var(--text2); margin-top: 6px; font-weight: 600; }
+
+/* ── MONTHLY ── */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  border: 1.5px solid var(--border);
+  background: var(--card);
+}
+.mtable { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 360px; }
+.mtable th {
+  background: var(--peach-bg);
+  padding: 10px 12px;
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--text2);
+  white-space: nowrap;
+  text-align: right;
+  border-bottom: 1.5px solid var(--border);
+}
+.mtable th:first-child { text-align: left; }
+.mtable td {
+  padding: 8px 12px;
+  text-align: right;
+  border-top: 1px solid var(--border);
+  font-weight: 700;
+  color: var(--text);
+}
+.mtable td:first-child { text-align: left; color: var(--text2); font-size: 12px; white-space: nowrap; }
+.mtable tr.ev td { background: var(--mint-bg); color: var(--mint); }
+.mtable tr.ev td:first-child { font-weight: 800; }
+.mtable td.done { color: var(--mint); text-align: center; }
+.mtable td.empty { color: var(--text3); text-align: center; }
+.more-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  border-top: 1.5px solid var(--border);
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: color .15s, background .15s;
+}
+.more-btn:hover { background: var(--peach-bg); color: var(--peach); }
+
+/* ── NOTICE ── */
+.notice {
+  background: var(--sky-bg);
+  border: 1.5px solid #b8d9f5;
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-top: 14px;
+  font-weight: 600;
+}
+.notice strong { color: var(--text); }
+
+/* ── FOOTER NAV ── */
+.footer-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: var(--footer-h);
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 100;
+}
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  transition: all .2s;
+  min-width: 60px;
+  font-family: var(--sans);
+}
+.nav-btn:active { transform: scale(.92); }
+.nav-icon {
+  width: 36px; height: 36px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  transition: all .2s;
+  background: transparent;
+}
+.nav-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  transition: color .2s;
+}
+.nav-btn.active .nav-icon {
+  background: var(--peach-bg);
+  box-shadow: 0 3px 12px rgba(255,143,171,.25);
+}
+.nav-btn.active .nav-label { color: var(--peach); }
+
+/* ── BACK TO TOP ── */
+@media (max-width: 480px) {
+  .fields { grid-template-columns: 1fr; }
+  .compare-row { grid-template-columns: 1fr; }
+  .sum-val { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="scroll-area" id="scroll-area">
+  <!-- HEADER (各ページで更新) -->
+  <div class="app-header" id="app-header">
+    <div class="header-label">Debt Simulator</div>
+    <div class="header-title">かえせる！💸</div>
+    <div class="header-sub">アバランチ戦略で借金を最速完済</div>
+    <div class="header-chips" id="header-chips"></div>
+  </div>
+
+  <!-- 入力ページ -->
+  <div class="page active" id="page-input">
+    <div class="sum-row" id="input-summary"></div>
+    <div class="section-title">借入先一覧</div>
+    <div id="debt-list"></div>
+    <button class="add-btn" onclick="addDebt()">＋ 借入先を追加</button>
+    <div class="notice"><strong>入力すると全画面が即座に自動更新！</strong><br>年利0%の場合は手数料型として計算します。手数料欄に合計手数料を入力してね。</div>
+  </div>
+
+  <!-- アバランチページ -->
+  <div class="page" id="page-avalanche">
+    <div class="sum-row" id="av-summary"></div>
+    <div class="section-title">完済タイムライン</div>
+    <div class="timeline" id="av-timeline"></div>
+  </div>
+
+  <!-- 比較ページ -->
+  <div class="page" id="page-compare">
+    <div class="section-title">通常 vs アバランチ</div>
+    <div class="compare-row" id="compare-cards"></div>
+    <div class="saving-hero">
+      <div class="sh-label">アバランチで節約できる利息 💰</div>
+      <div class="sh-amount" id="saving-amount">—</div>
+      <div class="sh-sub" id="saving-sub"></div>
+    </div>
+  </div>
+
+  <!-- 月次ページ -->
+  <div class="page" id="page-monthly">
+    <div class="section-title">月次残高推移</div>
+    <div class="table-wrap">
+      <table class="mtable" id="month-table"></table>
+      <button class="more-btn" id="more-btn" onclick="showMore()">もっと見る ▼</button>
+    </div>
+  </div>
+</div>
+
+<!-- フッターナビ -->
+<nav class="footer-nav">
+  <button class="nav-btn active" id="nav-input" onclick="setPage('input')">
+    <div class="nav-icon">📝</div>
+    <div class="nav-label">入力</div>
+  </button>
+  <button class="nav-btn" id="nav-avalanche" onclick="setPage('avalanche')">
+    <div class="nav-icon">🏔</div>
+    <div class="nav-label">アバランチ</div>
+  </button>
+  <button class="nav-btn" id="nav-compare" onclick="setPage('compare')">
+    <div class="nav-icon">📊</div>
+    <div class="nav-label">比較</div>
+  </button>
+  <button class="nav-btn" id="nav-monthly" onclick="setPage('monthly')">
+    <div class="nav-icon">📅</div>
+    <div class="nav-label">月次</div>
+  </button>
+</nav>
+
+<script>
+const DEBT_ICONS = ['🐱','🐰','🐻','🦊','🐼','🐨'];
+const DEBT_COLORS = ['#ff8fab','#ffbe0b','#c77dff','#4ea8de','#52b788','#ff9f1c'];
+
+const DEFAULT_DEBTS = [
+  {id:1, name:'Kyash',          balance:200000, rate:18.0, monthly:55468, fee:0},
+  {id:2, name:'UFJ',            balance:488908, rate:14.6, monthly:10000, fee:0},
+  {id:3, name:'メルカリSM',     balance:188827, rate:13.6, monthly:11000, fee:0},
+  {id:4, name:'メルカリカード', balance:316500, rate:0,    monthly:16735, fee:63767},
+  {id:5, name:'三井カード分割', balance:345000, rate:0,    monthly:17204, fee:67896},
+];
+function loadDebts(){try{const s=localStorage.getItem('kaeseru_debts');if(s)return JSON.parse(s);}catch(e){}return JSON.parse(JSON.stringify(DEFAULT_DEBTS));}
+function saveDebts(){try{localStorage.setItem('kaeseru_debts',JSON.stringify(debts));}catch(e){}}
+function loadNextId(){try{const s=localStorage.getItem('kaeseru_nextid');if(s)return parseInt(s);}catch(e){}return 6;}
+function saveNextId(){try{localStorage.setItem('kaeseru_nextid',String(nextId));}catch(e){}}
+function showSavedToast(){
+  let t=document.getElementById('save-toast');
+  if(!t){t=document.createElement('div');t.id='save-toast';t.style.cssText='position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--mint);color:#fff;font-size:12px;font-weight:800;padding:7px 18px;border-radius:20px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(82,183,136,.35);';document.body.appendChild(t);}
+  const now=new Date();t.textContent='💾 保存しました（'+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')+'）';
+  t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>{t.style.opacity='0';},2000);
+}
+let debts=loadDebts();
+let nextId=loadNextId(), shownMonths=24, avCache=null, noCache=null, currentPage='input';
+
+const yen = v => v==null?'—':'¥'+Math.round(v).toLocaleString();
+function monthStr(m){if(!m||m>=360)return'完済不可';const y=Math.floor(m/12),mo=m%12;return y>0?(y+'年'+(mo>0?mo+'ヶ月':'')):(mo+'ヶ月');}
+function endDate(m){if(!m||m>=360)return'—';const d=new Date();d.setMonth(d.getMonth()+m);return d.getFullYear()+'年'+(d.getMonth()+1)+'月';}
+
+function calcInterest(d, bal) {
+  if (d.rate > 0) return bal * (d.rate / 100 / 12);
+  if (d.fee > 0)  return d.fee / Math.max(1, Math.ceil(d.balance / (d.monthly||1)));
+  return 0;
+}
+
+function simAv(ds) {
+  const items = JSON.parse(JSON.stringify(ds.filter(d=>d.balance>0).sort((a,b)=>b.rate-a.rate)));
+  items.forEach(d=>{d.bal=d.balance;d.ti=0;d.cm=null;});
+  const history=[]; let month=0;
+  while(items.some(d=>d.bal>0) && month<360) {
+    month++;
+    items.forEach(d=>{if(d.bal<=0)return;const i=calcInterest(d,d.bal);d.ti+=i;d.bal+=i;});
+    items.forEach(d=>{
+      if(d.bal<=0)return;
+      const pay=Math.min(d.monthly||0,d.bal);d.bal-=pay;
+      if(d.bal<0.5){d.bal=0;if(!d.cm)d.cm=month;}
+    });
+    let extra=items.filter(d=>d.cm&&d.cm<month).reduce((s,d)=>s+(d.monthly||0),0);
+    if(extra>0){for(const d of items){if(d.bal<=0)continue;const p=Math.min(extra,d.bal);d.bal-=p;extra-=p;if(d.bal<0.5){d.bal=0;if(!d.cm)d.cm=month;}if(extra<=0)break;}}
+    const row={month}; items.forEach(d=>row[d.id]=Math.max(0,d.bal)); history.push(row);
+    if(!items.some(d=>d.bal>0))break;
+  }
+  return{items,history,months:month,ti:items.reduce((s,d)=>s+d.ti,0)};
+}
+
+function simNo(ds) {
+  const items=JSON.parse(JSON.stringify(ds.filter(d=>d.balance>0)));
+  items.forEach(d=>{d.bal=d.balance;d.ti=0;d.cm=null;});
+  let month=0;
+  while(items.some(d=>d.bal>0)&&month<360){
+    month++;
+    items.forEach(d=>{
+      if(d.bal<=0||!d.monthly)return;
+      const i=calcInterest(d,d.bal); d.ti+=i;
+      d.bal=d.bal+i-d.monthly;
+      if(d.bal<0.5){d.bal=0;if(!d.cm)d.cm=month;}
+    });
+  }
+  return{items,months:month,ti:items.reduce((s,d)=>s+d.ti,0)};
+}
+
+function setPage(name) {
+  currentPage = name;
+  ['input','avalanche','compare','monthly'].forEach(n=>{
+    document.getElementById('page-'+n).classList.toggle('active', n===name);
+    document.getElementById('nav-'+n).classList.toggle('active', n===name);
+  });
+  document.getElementById('scroll-area').scrollTo({top:0,behavior:'smooth'});
+  updateHeader();
+}
+
+function updateHeader() {
+  const av = avCache;
+  if (!av) return;
+  const totalBal = debts.reduce((s,d)=>s+(d.balance||0),0);
+  const totalPay = debts.reduce((s,d)=>s+(d.monthly||0),0);
+
+  const titles = {
+    input:     ['入力', 'かえせる！💸', '借入先の情報を入力してね'],
+    avalanche: ['アバランチ', '🏔 返済ルート', `完済予定：${endDate(av.months)}`],
+    compare:   ['比較', '📊 効果比較', `節約利息：${yen(Math.max(0,noCache.ti-av.ti))}`],
+    monthly:   ['月次', '📅 残高推移', '月ごとの返済シミュレーション'],
+  };
+  const [label, title, sub] = titles[currentPage];
+  document.querySelector('.header-label').textContent = label;
+  document.querySelector('.header-title').textContent = title;
+  document.querySelector('.header-sub').textContent = sub;
+
+  document.getElementById('header-chips').innerHTML = `
+    <div class="chip">総残高 ${yen(totalBal)}</div>
+    <div class="chip">月払 ${yen(totalPay)}</div>
+    <div class="chip">完済 ${endDate(av.months)}</div>
+  `;
+}
+
+function renderAll() {
+  avCache = simAv(debts);
+  noCache = simNo(debts);
+  renderInput();
+  renderAv();
+  renderCompare();
+  renderMonthly();
+  updateHeader();
+}
+
+// ── 入力 ──
+function renderInput() {
+  const totalBal = debts.reduce((s,d)=>s+(d.balance||0),0);
+  const totalPay = debts.reduce((s,d)=>s+(d.monthly||0),0);
+  document.getElementById('input-summary').innerHTML = `
+    <div class="sum-card peach">
+      <div class="sum-label">💳 総残高</div>
+      <div class="sum-val pink">${yen(totalBal)}</div>
+      <div class="sum-sub">${debts.filter(d=>d.balance>0).length}件の借入</div>
+    </div>
+    <div class="sum-card sky">
+      <div class="sum-label">💰 月返済合計</div>
+      <div class="sum-val blue">${yen(totalPay)}</div>
+      <div class="sum-sub">固定で毎月返済中</div>
+    </div>
+  `;
+
+  const list = document.getElementById('debt-list');
+  list.innerHTML = '';
+  debts.forEach((d, idx) => {
+    let months = null;
+    if (d.balance > 0 && d.monthly > 0) {
+      let bal = d.balance, m = 0;
+      while (bal > 0 && m < 360) {
+        m++;
+        const i = calcInterest(d, bal);
+        bal = bal + i - d.monthly;
+        if (bal < 0.5) { bal = 0; break; }
+      }
+      months = bal <= 0 ? m : null;
+    }
+    const rc = d.rate>=15?'rp-hot': d.rate>=10?'rp-warm': d.rate>0?'rp-cool':'rp-fee';
+    const rl = d.rate>0 ? d.rate+'%' : '手数料型';
+    const icon = DEBT_ICONS[idx % DEBT_ICONS.length];
+    const color = DEBT_COLORS[idx % DEBT_COLORS.length];
+
+    const card = document.createElement('div');
+    card.className = 'debt-card';
+    card.id = 'card-' + d.id;
+    card.innerHTML = `
+      <div class="dch" onclick="toggleCard(${d.id})">
+        <div class="debt-icon" style="background:${color}22">${icon}</div>
+        <div class="debt-info">
+          <div class="debt-name-text">${d.name || '（名前なし）'}</div>
+          <div class="debt-balance-text">${yen(d.balance)}</div>
+        </div>
+        <span class="rate-pill ${rc}">${rl}</span>
+        <span class="chevron-icon">▼</span>
+      </div>
+      <div class="dcb">
+        <div class="fields">
+          <div class="field"><label>借入先の名前</label>
+            <input type="text" value="${d.name}" placeholder="例：UFJ" oninput="upd(${d.id},'name',this.value)"></div>
+          <div class="field"><label>残高（円）</label>
+            <input type="number" inputmode="numeric" value="${d.balance||''}" placeholder="0" oninput="upd(${d.id},'balance',+this.value||0)"></div>
+          <div class="field"><label>年利（%）※手数料型は0</label>
+            <input type="number" inputmode="decimal" value="${d.rate||''}" placeholder="0" step="0.1" oninput="upd(${d.id},'rate',+this.value||0)"></div>
+          <div class="field"><label>月返済額（円）</label>
+            <input type="number" inputmode="numeric" value="${d.monthly||''}" placeholder="0" oninput="upd(${d.id},'monthly',+this.value||0)"></div>
+          <div class="field"><label>手数料合計（円）</label>
+            <input type="number" inputmode="numeric" value="${d.fee||''}" placeholder="0" oninput="upd(${d.id},'fee',+this.value||0)"></div>
+        </div>
+        <div class="debt-result-box">
+          <div>
+            <div class="dr-label">単独完済まで</div>
+            <div class="dr-val ${d.monthly>0&&months?'good':'bad'}">
+              ${!d.monthly?'返済額を入力してね': months?monthStr(months):'完済不可（返済額不足）'}
+            </div>
+            ${months?`<div class="dr-sub">${endDate(months)} 完済予定</div>`:''}
+          </div>
+          <button class="del-btn" onclick="removeDebt(${d.id})">✕</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function toggleCard(id) { document.getElementById('card-'+id).classList.toggle('open'); }
+function upd(id, key, val) { const d=debts.find(d=>d.id===id); if(d){d[key]=val;saveDebts();renderAll();showSavedToast();} }
+function removeDebt(id) { debts=debts.filter(d=>d.id!==id); saveDebts();renderAll(); showSavedToast(); }
+function addDebt() {
+  debts.push({id:nextId++,name:'',balance:0,rate:0,monthly:0,fee:0});
+  saveDebts(); saveNextId(); renderAll();
+  setTimeout(()=>{ const l=document.querySelector('#debt-list .debt-card:last-child'); if(l)l.classList.add('open'); },40);
+}
+
+// ── アバランチ ──
+function renderAv() {
+  const {items,months,ti}=avCache;
+  const totalPay=debts.reduce((s,d)=>s+(d.monthly||0),0);
+  document.getElementById('av-summary').innerHTML=`
+    <div class="sum-card mint">
+      <div class="sum-label">🎯 完済予定</div>
+      <div class="sum-val green">${endDate(months)}</div>
+      <div class="sum-sub">${monthStr(months)}後！</div>
+    </div>
+    <div class="sum-card lav">
+      <div class="sum-label">💸 総利息予測</div>
+      <div class="sum-val purple">${yen(ti)}</div>
+      <div class="sum-sub">月${yen(totalPay)}固定で</div>
+    </div>
+  `;
+  const order=items.filter(d=>d.cm).sort((a,b)=>a.cm-b.cm);
+  const tl=document.getElementById('av-timeline'); tl.innerHTML='';
+  order.forEach((d,si)=>{
+    const color = DEBT_COLORS[si % DEBT_COLORS.length];
+    const freed = order.slice(0,si).reduce((s,x)=>s+(x.monthly||0),0);
+    const el=document.createElement('div'); el.className='tl-item';
+    el.innerHTML=`
+      <div class="tl-dot" style="background:${color}"></div>
+      <div class="tl-card">
+        <div class="tl-step" style="color:${color}">STEP ${si+1}</div>
+        <div class="tl-name">${d.name} 完済！🎉</div>
+        <div class="tl-date">${endDate(d.cm)}（${monthStr(d.cm)}後）</div>
+        <div class="tl-note">${d.rate>0?'金利'+d.rate+'%':'手数料型'} • 残高${yen(d.balance)}スタート</div>
+        ${freed>0?`<div class="boost-pill">⚡ +${yen(freed)}/月 次の借金に上乗せ！</div>`:si===0?'<div class="boost-pill">⭐ まずここに集中！</div>':''}
+      </div>
+    `;
+    tl.appendChild(el);
+  });
+  if(order.length>0){
+    const done=document.createElement('div'); done.className='tl-item';
+    done.innerHTML=`
+      <div class="tl-dot" style="background:var(--mint)"></div>
+      <div class="finish-card">
+        <div class="finish-emoji">🎊</div>
+        <div class="finish-title">全借金完済！</div>
+        <div class="finish-date">${endDate(months)}（${monthStr(months)}後）</div>
+      </div>
+    `;
+    tl.appendChild(done);
+  }
+}
+
+// ── 比較 ──
+function renderCompare() {
+  const av=avCache, no=noCache;
+  const savedInt=Math.max(0,no.ti-av.ti);
+  const savedM=Math.max(0,no.months-av.months);
+  document.getElementById('compare-cards').innerHTML=`
+    <div class="compare-card">
+      <div class="cc-label">通常返済</div>
+      <div class="cc-item"><span class="cc-k">完済まで</span><span class="cc-v">${monthStr(no.months)}</span></div>
+      <div class="cc-item"><span class="cc-k">完済予定</span><span class="cc-v">${endDate(no.months)}</span></div>
+      <div class="cc-item"><span class="cc-k">総利息</span><span class="cc-v">${yen(no.ti)}</span></div>
+    </div>
+    <div class="compare-card best">
+      <div class="cc-label">アバランチ ✨</div>
+      <div class="cc-item"><span class="cc-k">完済まで</span><span class="cc-v green">${monthStr(av.months)}</span></div>
+      <div class="cc-item"><span class="cc-k">完済予定</span><span class="cc-v green">${endDate(av.months)}</span></div>
+      <div class="cc-item"><span class="cc-k">総利息</span><span class="cc-v green">${yen(av.ti)}</span></div>
+    </div>
+  `;
+  document.getElementById('saving-amount').textContent = yen(savedInt);
+  document.getElementById('saving-sub').textContent = savedM>0?`通常より ${monthStr(savedM)} 早く完済できる！`:'同じ時期に完済';
+}
+
+// ── 月次 ──
+function renderMonthly() {
+  const {items,history}=avCache;
+  const cm={}; items.forEach(d=>{if(d.cm)cm[d.id]=d.cm;});
+  let html='<thead><tr><th>年月</th>';
+  items.forEach(d=>{html+=`<th>${d.name}</th>`;});
+  html+='<th>合計</th></tr></thead><tbody>';
+  const shown=Math.min(shownMonths,history.length);
+  for(let i=0;i<shown;i++){
+    const row=history[i], m=row.month;
+    const dt=new Date(); dt.setMonth(dt.getMonth()+m);
+    const ds=`${dt.getFullYear()}/${dt.getMonth()+1}`;
+    const isEv=items.some(it=>it.cm===m);
+    const total=items.reduce((s,it)=>s+(row[it.id]||0),0);
+    html+=`<tr class="${isEv?'ev':''}"><td>${ds}</td>`;
+    items.forEach(it=>{
+      const bal=row[it.id]||0;
+      const isDone=bal===0&&(cm[it.id]||999)<=m;
+      if(isDone) html+='<td class="done">✓</td>';
+      else if(bal===0) html+='<td class="empty">—</td>';
+      else html+=`<td>${Math.round(bal).toLocaleString()}</td>`;
+    });
+    html+=`<td>${total===0?'🎉':Math.round(total).toLocaleString()}</td></tr>`;
+    if(total===0)break;
+  }
+  html+='</tbody>';
+  document.getElementById('month-table').innerHTML=html;
+  document.getElementById('more-btn').style.display=shownMonths>=history.length?'none':'block';
+}
+function showMore(){shownMonths+=24;renderMonthly();}
+
+renderAll();
+
+// 入力ページにリセットボタン追加
+function addResetBtn(){
+  const notice = document.querySelector('.notice');
+  if(!notice || document.getElementById('reset-btn')) return;
+  const btn = document.createElement('button');
+  btn.id='reset-btn';
+  btn.textContent='🗑 データをリセット';
+  btn.style.cssText='margin-top:10px;width:100%;padding:10px;border:none;background:transparent;color:var(--text3);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);';
+  btn.onclick=()=>{
+    if(confirm('すべてのデータをリセットしますか？\n（入力した借入先データが消えます）')){
+      localStorage.removeItem('kaeseru_debts');
+      localStorage.removeItem('kaeseru_nextid');
+      debts=JSON.parse(JSON.stringify(DEFAULT_DEBTS));
+      nextId=6;
+      renderAll();
+    }
+  };
+  notice.after(btn);
+}
+addResetBtn();
+</script>
+</body>
+</html>
